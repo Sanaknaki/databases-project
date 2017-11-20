@@ -1,6 +1,5 @@
 
 # Databases 2 Project
-<br><br>
 Project for a Databases2 (CSI3130), built using C.
 ## INFORMATION
 
