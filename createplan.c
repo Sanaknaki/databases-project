@@ -4075,7 +4075,8 @@ create_hashjoin_plan(PlannerInfo *root,
 					 HashPath *best_path)
 {
 	HashJoin   *join_plan;
-	Hash	   *hash_plan;
+	Hash	   *inner_hash_plan; // CSI3130
+	Hash	   *outer_hash_plan; // CSI3130
 	Plan	   *outer_plan;
 	Plan	   *inner_plan;
 	List	   *tlist = build_path_tlist(root, &best_path->jpath.path);
@@ -4178,7 +4179,13 @@ create_hashjoin_plan(PlannerInfo *root,
 	/*
 	 * Build the hash node and hash join node.
 	 */
-	hash_plan = make_hash(inner_plan,
+	inner_hash_plan = make_hash(inner_plan,
+						  skewTable,
+						  skewColumn,
+						  skewInherit);
+
+	// CSI3130
+	outer_hash_plan = make_hash(outer_plan,
 						  skewTable,
 						  skewColumn,
 						  skewInherit);
@@ -4187,15 +4194,21 @@ create_hashjoin_plan(PlannerInfo *root,
 	 * Set Hash node's startup & total costs equal to total cost of input
 	 * plan; this only affects EXPLAIN display not decisions.
 	 */
-	copy_plan_costsize(&hash_plan->plan, inner_plan);
-	hash_plan->plan.startup_cost = hash_plan->plan.total_cost;
+	copy_plan_costsize(&inner_hash_plan->plan, inner_plan);
+	inner_hash_plan->plan.startup_cost = inner_hash_plan->plan.total_cost;
+
+
+	// CSI3130
+	copy_plan_costsize(&outer_hash_plan->plan, outer_plan);
+	outer_hash_plan->plan.startup_cost = outer_hash_plan->plan.total_cost;
 
 	join_plan = make_hashjoin(tlist,
 							  joinclauses,
 							  otherclauses,
 							  hashclauses,
 							  outer_plan,
-							  (Plan *) hash_plan,
+							  (Plan *) inner_hash_plan,
+								(Plan *) outer_hash_plan, // CSI3130
 							  best_path->jpath.jointype,
 							  best_path->jpath.inner_unique);
 
