@@ -879,6 +879,8 @@ typedef struct PlanState
 	/*
 	 * Other run-time state needed by most if not all node types.
 	 */
+	TupleTableSlot *psInnerTupleSlot;	// CSI3130
+	TupleTableSlot *psOuterTupleSlot;	// CSI3130
 	TupleTableSlot *ps_ResultTupleSlot; /* slot for my result tuples */
 	ExprContext *ps_ExprContext;	/* node's expression-evaluation context */
 	ProjectionInfo *ps_ProjInfo;	/* info for doing tuple projection */
@@ -1705,19 +1707,44 @@ typedef struct HashJoinState
 	List	   *hj_OuterHashKeys;	/* list of ExprState nodes */
 	List	   *hj_InnerHashKeys;	/* list of ExprState nodes */
 	List	   *hj_HashOperators;	/* list of operator OIDs */
-	HashJoinTable hj_HashTable;
+
+	HashJoinTuple innerHjCurTuple;   //CSI3130
+	HashJoinTuple outerHjCurTuple;   //CSI3130
+	HashJoinTable innerHjHashTable; //CSI3130
+	HashJoinTable outerHjHashTable; //CSI3130
+
 	uint32		hj_CurHashValue;
+	uint32		innerHjCurHashValue; //CSI3130
+	uint32		outerHjCurHashValue; //CSI3130
+	int 		innerHjCurBucketNo;  //CSI3130
+	int 		outerHjCurBucketNo;  //CSI3130
+
+	HashJoinTable hj_HashTable;
 	int			hj_CurBucketNo;
 	int			hj_CurSkewBucketNo;
 	HashJoinTuple hj_CurTuple;
+
 	TupleTableSlot *hj_OuterTupleSlot;
 	TupleTableSlot *hj_HashTupleSlot;
 	TupleTableSlot *hj_NullOuterTupleSlot;
 	TupleTableSlot *hj_NullInnerTupleSlot;
 	TupleTableSlot *hj_FirstOuterTupleSlot;
+	TupleTableSlot *hjInnerTupleSlot;	//CSI3130
+	TupleTableSlot *innerHjHashTupleSlot;	//CSI3130
+	TupleTableSlot *outerHjHashTupleSlot;	//CSI3130
+	TupleTableSlot *hjFirstInnerTupleSlot;	//CSI3130
+
+	int  		matchesByProbingInner;	//CSI3130
+	int 		matchesByProbingOuter;	//CSI3130
 	int			hj_JoinState;
+
 	bool		hj_MatchedOuter;
 	bool		hj_OuterNotEmpty;
+	bool 		innerExhausted;	//CSI3130
+	bool 		outerExhausted;	//CSI3130
+	bool		hjNeedNewInner;	//CSI3130
+	bool		hjInnerNotEmpty;	//CSI3130
+	bool		isNextFetchInner;	//CSI3130
 } HashJoinState;
 
 
